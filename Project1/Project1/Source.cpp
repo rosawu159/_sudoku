@@ -1,30 +1,31 @@
 #include <iostream>
-#include<fstream>
-#include<string>
+#include <fstream>
+#include <string>
+#include <vector>
 #define N 9
 using namespace std;
 
-
-const std::string FILE_NAME = "Question.txt";
-
-void print(char a[N][N]);
+const string FILE_NAME = "Question.txt";
 
 char a[N][N] = { 'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n',
-'n','n','n','n','n','n','n','n','n' };
+				 'n','n','n','n','n','n','n','n','n',
+				 'n','n','n','n','n','n','n','n','n',
+				 'n','n','n','n','n','n','n','n','n',
+				 'n','n','n','n','n','n','n','n','n',
+				 'n','n','n','n','n','n','n','n','n',
+				 'n','n','n','n','n','n','n','n','n',
+				 'n','n','n','n','n','n','n','n','n',
+				 'n','n','n','n','n','n','n','n','n' };
+
+void print(char a[N][N]);
+void fillIn(char a[N][N], char ans[N][N]);
 
 int main()
 {
-
 	fstream file;
 	file.open(FILE_NAME, ios::in);
 	char output[100];
+	char ans[N][N];
 	int i = 0;
 	while (file.getline(output, sizeof(output), '\n')) {//把檔案input到矩陣
 		for (int j = 0; j < 9; j++) {
@@ -32,10 +33,21 @@ int main()
 		}
 		i++;
 	}
+	file.close();
 
+	//把a複製到ans
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+			ans[i][j] = a[i][j];
+	}
 
+	/*insert code below*/
+	fillIn(a, ans);
 
-	print(a);
+	/*insert code above*/
+
+	print(ans);
 	system("pause");
 	return 0;
 }
@@ -59,3 +71,32 @@ void print(char a[N][N])
 	}
 	printf(" ---------  ---------  ---------\n");
 }
+
+void fillIn(char a[N][N], char ans[N][N])
+{
+	vector<int> existNums;
+	vector<int>::iterator it;
+
+	for (int i = 0; i < N; i++)
+	{
+		//先檢查每列已存在的數字，並push到vector裡
+		for (int j = 0; j < N; j++)
+		{
+			if (a[i][j] != 'n')
+				existNums.push_back(a[i][j] - 48);
+		}
+
+		for (int j = 0; j < N; j++)
+		{
+			//尋找目前的j是否已存在
+			it = find(existNums.begin(), existNums.end(), j + 1);
+			
+			//若不存在，填入陣列ans的對應格子內(若存在會留空)
+			if (it == existNums.end() && ans[i][j] == 'n')
+				ans[i][j] = j + 49;
+		}
+
+		existNums.clear();
+	}
+}
+
