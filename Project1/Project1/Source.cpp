@@ -18,7 +18,7 @@ char a[N][N] = { 'n','n','n','n','n','n','n','n','n',
 				 'n','n','n','n','n','n','n','n','n' };
 
 void print(char a[N][N]);
-void fillIn(char a[N][N], char ans[N][N]);
+void rowFillIn(char a[N][N], char ans[N][N]);
 
 int main()
 {
@@ -43,7 +43,7 @@ int main()
 	}
 
 	/*insert code below*/
-	fillIn(a, ans);
+	rowFillIn(a, ans);
 
 	/*insert code above*/
 
@@ -72,7 +72,8 @@ void print(char a[N][N])
 	printf(" ---------  ---------  ---------\n");
 }
 
-void fillIn(char a[N][N], char ans[N][N])
+//以一列當中的數字不重複為原則，填滿九宮格
+void rowFillIn(char a[N][N], char ans[N][N])
 {
 	vector<int> existNums;
 	vector<int>::iterator it;
