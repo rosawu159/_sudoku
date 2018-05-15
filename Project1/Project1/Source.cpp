@@ -7,30 +7,31 @@ using namespace std;
 const string FILE_NAME = "Question.txt";
 
 char a[N][N] = { 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n',
-				 'n','n','n','n','n','n','n','n','n' };
-bool existNum[N][N];
+'n','n','n','n','n','n','n','n','n',
+'n','n','n','n','n','n','n','n','n',
+'n','n','n','n','n','n','n','n','n',
+'n','n','n','n','n','n','n','n','n',
+'n','n','n','n','n','n','n','n','n',
+'n','n','n','n','n','n','n','n','n',
+'n','n','n','n','n','n','n','n','n',
+'n','n','n','n','n','n','n','n','n' };
+bool existNum[N][N];	//若為題目原有的數字，在對應二維陣列位置上會為true。
 
 struct position
 {
-	int row, col;
+	short row, col;
 };
 
 void print(char a[N][N]);
-void fillIn(char a[N][N]);
-void findNum(int row, int col,int k, char a[N][N]);
-void checkExistNum(char a[N][N], bool e[N][N]);
-bool checkRow(int n,int row, char a[N][N]);
-bool checkColumn(int n, int col, char a[N][N]);
-bool checkBlock(int n, int row, int col, char a[N][N]);
-position checkPreviousPos(int i, int j);
-position checkNextPos(int i, int j);
+void initialize(char a[N][N]);	//將n改為0，以便操作
+void fillIn(char a[N][N]);	//填滿九宮格
+void findNum(short row, short col, char a[N][N]);	//用backtracing方式尋找適當數字
+void checkExistNum(char a[N][N], bool e[N][N]);	//將題目原有的數字挑出來，存到bool existNum當中。
+bool checkRow(char n, short row, short col, char a[N][N]);	//確認同一列中有無重複數字
+bool checkColumn(char n, short row, short col, char a[N][N]);	//確認同一行中有無重複數字
+bool checkBlock(char n, short row, short col, char a[N][N]);	//確認同一九宮格中有無重複數字
+position checkPreviousPos(short i, short j);	//回傳目前作用中空格的前一格座標
+position checkNextPos(short i, short j);	//回傳目前作用中空格的下一格座標
 
 int main()
 {
@@ -47,14 +48,11 @@ int main()
 	}
 	file.close();
 
-
-	/*insert code below*/
 	checkExistNum(a, existNum);
+	initialize(a);
 	fillIn(a);
-
-	/*insert code above*/
-
 	print(a);
+
 	system("pause");
 	return 0;
 }
@@ -79,116 +77,95 @@ void print(char a[N][N])
 	printf(" ---------  ---------  ---------\n");
 }
 
-//填滿九宮格
+void initialize(char a[N][N])
+{
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+		{
+			if (a[i][j] == 'n')
+				a[i][j] = '0';
+		}
+	}
+
+	return;
+}
+
 void fillIn(char a[N][N])
 {
 	position firstBlank;
 	firstBlank.row = 9;
 	firstBlank.col = 9;
 
-		for (int i = 0; i < N; i++)
+	//找到題目中的第一個空格(Row major)後開始求解
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
 		{
-			for (int j = 0; j < N; j++)
+			if (!existNum[i][j] && a[i][j] == '0')
 			{
-				if (!existNum[i][j] && a[i][j] == 'n')
-				{
-					firstBlank.row = i;
-					firstBlank.col = i;
-					break;
-				}
-			}
-			if (firstBlank.row != 9 && firstBlank.col != 9)
-			{
+				firstBlank.row = i;
+				firstBlank.col = j;
 				break;
 			}
 		}
+		if (firstBlank.row != 9 && firstBlank.col != 9)
+		{
+			break;
+		}
+	}
 
-		findNum(firstBlank.row, firstBlank.col, '1', a);
+	findNum(firstBlank.row, firstBlank.col, a);
 
 	return;
 }
 
-void findNum(int row, int col,int k,char a[N][N])
+void findNum(short row, short col, char a[N][N])
 {
-	bool isAns = false, notAns = false;
+	position prePos, nextPos;
+	short flag = 0;	//用來確認如果遇到題目原有的數字，要往前skip還是往後skip。-1: 後退 1: 前進
 
-	if (existNum[row][col] && k > '1')
+	do
 	{
-		position prePos = checkPreviousPos(row, col);
-		row = prePos.row;
-		col = prePos.col;
-		if (a[row][col] <= '9'&&a[row][col] >= '1')
+		if (existNum[row][col])
 		{
-			findNum(row, col, a[row][col] + 1, a);
-		}
-		else if (a[row][col] == 'n')
-		{
-			findNum(row, col, '1', a);
-		}
-	}
-	else if (existNum[row][col] && k == '1')
-	{
-		position nextPos = checkNextPos(row, col);
-		row = nextPos.row;
-		col = nextPos.col;
-		findNum(row, col, '1', a);
-	}
-
-	if (checkRow(k, row, a) && checkColumn(k, col, a) && checkBlock(k, row, col, a) && !existNum[row][col] &&( a[row][col] < '9'||a[row][col]=='n'))
-	{
-		print(a);
-		cout << "===================" << endl;
-
-		a[row][col] = k;
-		position nextPos = checkNextPos(row, col);
-		row = nextPos.row;
-		col = nextPos.col;
-		findNum(row, col, '1', a);
-
-		for (int i = 0; i < N; i++)
-		{
-			for (int j = 0; j < N; j++)
+			if (flag == 1)
 			{
-				if (a[i][j] == 'n')
-				{
-					notAns = true;
-					break;
-				}
+				nextPos = checkNextPos(row, col);
+				row = nextPos.row;
+				col = nextPos.col;
+				continue;
 			}
-			if (notAns)
+			else if (flag == -1)
 			{
-				notAns = false;
-				break;
+				prePos = checkPreviousPos(row, col);
+				row = prePos.row;
+				col = prePos.col;
+				continue;
 			}
-			if (i == N - 1 && !notAns)
-				isAns = true;
 		}
 
-		if (isAns)
-			return;
-	}
-	else if (k < '9'&&k >= '1')
-	{
-		findNum(row, col, ++k,a);
-	}
-	else
-	{
-		if (!existNum[row][col])
+		a[row][col]++;
+
+		if (a[row][col] > '9')
 		{
-			a[row][col] = 'n';
+			a[row][col] = '0';
+			prePos = checkPreviousPos(row, col);
+			row = prePos.row;
+			col = prePos.col;
+			flag = -1;
 		}
-		position prePos = checkPreviousPos(row, col);
-		row = prePos.row;
-		col = prePos.col;
-		if (a[row][col] <= '9'&&a[row][col] >= '1')
+		else if (checkRow(a[row][col], row, col, a) && checkColumn(a[row][col], row, col, a) && checkBlock(a[row][col], row, col, a))
 		{
-			findNum(row, col, a[row][col] + 1, a);
+			nextPos = checkNextPos(row, col);
+			row = nextPos.row;
+			col = nextPos.col;
+			flag = 1;
 		}
-		else if (a[row][col] == 'n')
-		{
-			findNum(row, col, '1', a);
-		}
-	}
+
+	} while (row != -1);
+
+	return;
 }
 
 void checkExistNum(char a[N][N], bool e[N][N])
@@ -198,34 +175,36 @@ void checkExistNum(char a[N][N], bool e[N][N])
 		for (int j = 0; j < N; j++)
 		{
 			if (a[i][j] != 'n')
-			{
 				e[i][j] = true;
-			}
 		}
 	}
 }
 
-bool checkRow(int n,int row, char a[N][N])
+bool checkRow(char n, short row, short col, char a[N][N])
 {
 	for (int i = 0; i < N; i++)
 	{
+		if (i == col)
+			continue;
 		if (a[row][i] == n)
 			return false;
 	}
 	return true;
 }
 
-bool checkColumn(int n,int col, char a[N][N])
+bool checkColumn(char n, short row, short col, char a[N][N])
 {
 	for (int i = 0; i < N; i++)
 	{
+		if (i == row)
+			continue;
 		if (a[i][col] == n)
 			return false;
 	}
 	return true;
 }
 
-bool checkBlock(int n,int row,int col, char a[N][N])
+bool checkBlock(char n, short row, short col, char a[N][N])
 {
 	if (row >= 0 && row <= 2)
 	{
@@ -236,6 +215,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 0; j < 3; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -248,6 +229,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 3; j < 6; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -260,6 +243,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 6; j < 9; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -275,6 +260,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 0; j < 3; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -287,6 +274,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 3; j < 6; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -299,6 +288,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 6; j < 9; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -314,6 +305,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 0; j < 3; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -326,6 +319,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 3; j < 6; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -338,6 +333,8 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 			{
 				for (int j = 6; j < 9; j++)
 				{
+					if (i == row && j == col)
+						continue;
 					if (a[i][j] == n)
 						return false;
 				}
@@ -347,7 +344,7 @@ bool checkBlock(int n,int row,int col, char a[N][N])
 	return true;
 }
 
-position checkPreviousPos(int i, int j)
+position checkPreviousPos(short i, short j)
 {
 	position tmp;
 
@@ -355,9 +352,9 @@ position checkPreviousPos(int i, int j)
 	{
 		if (j == 0)
 		{
-			tmp.row = 8;
-			tmp.col = 8;
-			return tmp;
+			cout << "No solution.";
+			system("PAUSE");
+			exit(0);
 		}
 		else
 		{
@@ -380,7 +377,7 @@ position checkPreviousPos(int i, int j)
 	}
 }
 
-position checkNextPos(int i, int j)
+position checkNextPos(short i, short j)
 {
 	position tmp;
 
@@ -388,8 +385,8 @@ position checkNextPos(int i, int j)
 	{
 		if (j == 8)
 		{
-			tmp.row = 0;
-			tmp.col = 0;
+			tmp.row = -1;
+			tmp.col = -1;
 			return tmp;
 		}
 		else
@@ -411,6 +408,5 @@ position checkNextPos(int i, int j)
 		tmp.col = j + 1;
 		return tmp;
 	}
-
 }
 
